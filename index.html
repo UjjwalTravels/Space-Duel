@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Duel: 2 Player Shooting Game</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      color: #4CAF50;
+      text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      margin-bottom: 10px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      max-width: 800px;
+      margin: 0 auto 20px;
+      padding: 10px;
+      background-color: #222;
+      border-radius: 8px;
+    }
+
+    .player-controls {
+      padding: 5px 15px;
+      border-radius: 5px;
+    }
+
+    #player1-controls {
+      background-color: rgba(255, 0, 0, 0.2);
+      border: 1px solid red;
+    }
+
+    #player2-controls {
+      background-color: rgba(0, 0, 255, 0.2);
+      border: 1px solid blue;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 800px;
+      height: 400px;
+      margin: 0 auto;
+      background-color: #222;
+      border: 3px solid #444;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .player {
+      width: 40px;
+      height: 40px;
+      position: absolute;
+      top: 180px;
+      border-radius: 50%;
+      transition: top 0.1s ease;
+    }
+
+    #player1 {
+      left: 10px;
+      background: radial-gradient(circle at 30% 30%, red, #800000);
+      box-shadow: 0 0 10px red;
+    }
+
+    #player2 {
+      right: 10px;
+      background: radial-gradient(circle at 30% 30%, blue, #000080);
+      box-shadow: 0 0 10px blue;
+    }
+
+    .bullet {
+      width: 15px;
+      height: 5px;
+      position: absolute;
+      border-radius: 5px;
+      transition: left 0.05s linear;
+    }
+
+    .p1-bullet {
+      background: linear-gradient(to right, #ff0, #f80);
+      box-shadow: 0 0 5px yellow;
+    }
+
+    .p2-bullet {
+      background: linear-gradient(to right, #0ff, #08f);
+      box-shadow: 0 0 5px cyan;
+    }
+
+    #scoreboard {
+      display: flex;
+      justify-content: space-around;
+      max-width: 800px;
+      margin: 20px auto;
+      font-size: 1.2em;
+    }
+
+    .score {
+      padding: 10px 20px;
+      border-radius: 5px;
+    }
+
+    #p1-score {
+      color: red;
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+
+    #p2-score {
+      color: blue;
+      background-color: rgba(0, 0, 255, 0.1);
+    }
+
+    #winnerText {
+      font-size: 2em;
+      margin: 20px 0;
+      min-height: 48px;
+      text-shadow: 0 0 10px currentColor;
+      transition: all 0.5s ease;
+    }
+
+    #restartBtn {
+      padding: 10px 25px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 10px;
+      display: none;
+    }
+
+    #restartBtn:hover {
+      background-color: #45a049;
+    }
+
+    .stars {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background-color: white;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Space Duel</h1>
+  
+  <div class="controls">
+    <div id="player1-controls" class="player-controls">
+      <strong>Player 1:</strong> W/S to move, D to shoot
+    </div>
+    <div id="player2-controls" class="player-controls">
+      <strong>Player 2:</strong> ↑/↓ to move, ← to shoot
+    </div>
+  </div>
+  
+  <div id="scoreboard">
+    <div id="p1-score" class="score">Player 1: 0</div>
+    <div id="p2-score" class="score">Player 2: 0</div>
+  </div>
+  
+  <div id="gameArea">
+    <div id="player1" class="player"></div>
+    <div id="player2" class="player"></div>
+  </div>
+  
+  <h2 id="winnerText"></h2>
+  <button id="restartBtn">Play Again</button>
+  
+  <script>
+    // Game elements
+    const player1 = document.getElementById("player1");
+    const player2 = document.getElementById("player2");
+    const gameArea = document.getElementById("gameArea");
+    const winnerText = document.getElementById("winnerText");
+    const p1ScoreDisplay = document.getElementById("p1-score");
+    const p2ScoreDisplay = document.getElementById("p2-score");
+    const restartBtn = document.getElementById("restartBtn");
+
+    // Game state
+    let p1Top = 180;
+    let p2Top = 180;
+    let p1Hits = 0;
+    let p2Hits = 0;
+    let gameActive = true;
+    let bullets = [];
+
+    // Create stars background
+    function createStars() {
+      for (let i = 0; i < 100; i++) {
+        const star = document.createElement("div");
+        star.classList.add("stars");
+        star.style.left = `${Math.random() * 800}px`;
+        star.style.top = `${Math.random() * 400}px`;
+        star.style.opacity = Math.random();
+        star.style.width = `${Math.random() * 3}px`;
+        star.style.height = star.style.width;
+        gameArea.appendChild(star);
+      }
+    }
+
+    // Player movement
+    function movePlayer(player, amount) {
+      if (!gameActive) return;
+      
+      if (player === 1) {
+        p1Top = Math.max(0, Math.min(360, p1Top + amount));
+        player1.style.top = p1Top + "px";
+      } else {
+        p2Top = Math.max(0, Math.min(360, p2Top + amount));
+        player2.style.top = p2Top + "px";
+      }
+    }
+
+    // Shooting mechanism
+    function shootBullet(fromPlayer) {
+      if (!gameActive) return;
+      
+      const bullet = document.createElement("div");
+      bullet.classList.add("bullet", fromPlayer === 1 ? "p1-bullet" : "p2-bullet");
+      gameArea.appendChild(bullet);
+
+      let left, top;
+      if (fromPlayer === 1) {
+        left = 50;
+        top = p1Top + 15;
+      } else {
+        left = 750;
+        top = p2Top + 15;
+      }
+
+      bullet.style.left = left + "px";
+      bullet.style.top = top + "px";
+
+      const bulletObj = {
+        element: bullet,
+        x: left,
+        y: top,
+        speed: fromPlayer === 1 ? 10 : -10,
+        player: fromPlayer,
+        active: true
+      };
+      
+      bullets.push(bulletObj);
+    }
+
+    // Bullet movement and collision
+    function updateBullets() {
+      bullets.forEach(bullet => {
+        if (!bullet.active) return;
+        
+        bullet.x += bullet.speed;
+        bullet.element.style.left = bullet.x + "px";
+
+        // Check boundaries
+        if (bullet.x < 0 || bullet.x > 800) {
+          bullet.element.remove();
+          bullet.active = false;
+          return;
+        }
+
+        // Check hit
+        const hit = checkHit(bullet.x, bullet.y, bullet.player);
+        if (hit) {
+          bullet.element.remove();
+          bullet.active = false;
+        }
+      });
+
+      // Remove inactive bullets
+      bullets = bullets.filter(bullet => bullet.active);
+    }
+
+    // Hit detection
+    function checkHit(x, y, fromPlayer) {
+      const target = fromPlayer === 1 ? player2 : player1;
+      const targetTop = fromPlayer === 1 ? p2Top : p1Top;
+      const targetLeft = fromPlayer === 1 ? 750 : 10;
+
+      if (x >= targetLeft && x <= targetLeft + 40 && y >= targetTop && y <= targetTop + 40) {
+        if (fromPlayer === 1) {
+          p1Hits++;
+          p1ScoreDisplay.textContent = `Player 1: ${p1Hits}`;
+          if (p1Hits >= 5) {
+            endGame("Player 1");
+          }
+        } else {
+          p2Hits++;
+          p2ScoreDisplay.textContent = `Player 2: ${p2Hits}`;
+          if (p2Hits >= 5) {
+            endGame("Player 2");
+          }
+        }
+        
+        // Visual hit effect
+        target.style.transform = "scale(1.3)";
+        setTimeout(() => {
+          target.style.transform = "scale(1)";
+        }, 200);
+        
+        return true;
+      }
+      return false;
+    }
+
+    // End game
+    function endGame(winner) {
+      gameActive = false;
+      winnerText.textContent = `🔥 ${winner} Wins! 🔥`;
+      winnerText.style.color = winner === "Player 1" ? "red" : "blue";
+      restartBtn.style.display = "inline-block";
+    }
+
+    // Restart game
+    function restartGame() {
+      // Reset positions
+      p1Top = 180;
+      p2Top = 180;
+      player1.style.top = p1Top + "px";
+      player2.style.top = p2Top + "px";
+      
+      // Reset scores
+      p1Hits = 0;
+      p2Hits = 0;
+      p1ScoreDisplay.textContent = "Player 1: 0";
+      p2ScoreDisplay.textContent = "Player 2: 0";
+      
+      // Clear bullets
+      bullets.forEach(bullet => bullet.element.remove());
+      bullets = [];
+      
+      // Reset UI
+      winnerText.textContent = "";
+      restartBtn.style.display = "none";
+      gameActive = true;
+    }
+
+    // Controls
+    function control(e) {
+      if (e.repeat) return;
+      
+      switch (e.key.toLowerCase()) {
+        case "w": movePlayer(1, -20); break;
+        case "s": movePlayer(1, 20); break;
+        case "d": shootBullet(1); break;
+
+        case "arrowup": movePlayer(2, -20); break;
+        case "arrowdown": movePlayer(2, 20); break;
+        case "arrowleft": shootBullet(2); break;
+      }
+    }
+
+    // Initialize game
+    function init() {
+      createStars();
+      document.addEventListener("keydown", control);
+      restartBtn.addEventListener("click", restartGame);
+      
+      // Game loop
+      setInterval(updateBullets, 16);
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+body {
+  background-color: #111;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+#gameArea {
+  position: relative;
+  width: 800px;
+  height: 400px;
+  margin: 20px auto;
+  background-color: #222;
+  border: 3px solid #fff;
+  overflow: hidden;
+}
+
+.player {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 180px;
+}
+
+#player1 {
+  left: 10px;
+  background-color: red;
+}
+
+#player2 {
+  right: 10px;
+  background-color: blue;
+}
+
+.bullet {
+  width: 10px;
+  height: 5px;
+  position: absolute;
+  background: yellow;
+}
